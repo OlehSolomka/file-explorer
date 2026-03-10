@@ -4,7 +4,7 @@ import { Slot } from 'radix-ui';
 import { cn } from '@/shared/utils';
 import { buttonVariants, type ButtonVariants } from './buttonVariants';
 
-function Button({
+const Button = ({
   className,
   variant = 'default',
   size = 'default',
@@ -13,7 +13,7 @@ function Button({
 }: React.ComponentProps<'button'> &
   ButtonVariants & {
     asChild?: boolean;
-  }) {
+  }) => {
   const Comp = asChild ? Slot.Root : 'button';
 
   return (
@@ -25,6 +25,6 @@ function Button({
       {...props}
     />
   );
-}
+};
 
 export { Button };
