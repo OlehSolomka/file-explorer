@@ -34,7 +34,6 @@ export const TreeSearch = ({ tree, query, onQueryChange }: TreeSearchProps) => {
           </button>
         )}
       </div>
-
       {results !== null && (
         <div className="flex flex-col gap-1">
           <p className="type-body-xs text-content-secondary mb-2">
@@ -45,6 +44,7 @@ export const TreeSearch = ({ tree, query, onQueryChange }: TreeSearchProps) => {
           {results.map(({ node, path }) => (
             <Link
               key={path.join('/')}
+              title={path.join('/')}
               to={ROUTES.TREE_NODE(encodePath(path))}
               className="border-border bg-surface-panel hover:bg-surface-panel/80 flex items-center gap-2 rounded-md border px-3 py-2"
             >
@@ -53,18 +53,19 @@ export const TreeSearch = ({ tree, query, onQueryChange }: TreeSearchProps) => {
               ) : (
                 <Folder size={14} className="text-content-secondary shrink-0" />
               )}
-              <span className="type-body-s text-content-primary max-w-[40%] truncate font-semibold">{node.name}</span>
+              <span className="type-body-s text-content-primary max-w-[40%] truncate font-semibold">
+                {node.name}
+              </span>
               {node.type === NODE_TYPE.FILE && (
                 <span className="type-body-xs text-content-secondary ml-auto shrink-0">
                   {formatSize(node.size)}
                 </span>
               )}
-              <span
-                className="type-body-xs text-content-secondary ml-auto max-w-xs truncate"
-                title={path.join('/')}
-              >
-                {path.join('/')}
-              </span>
+              {node.type === NODE_TYPE.FOLDER && (
+                <span className="type-body-xs text-content-secondary ml-auto shrink-0">
+                  {node.children.length} item{node.children.length !== 1 ? 's' : ''}
+                </span>
+              )}
             </Link>
           ))}
         </div>

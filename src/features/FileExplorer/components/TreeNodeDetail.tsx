@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { File, Folder } from 'lucide-react';
+import { File, Folder, Search } from 'lucide-react';
 import { ROUTES } from '@/router/routes';
 import { Breadcrumb } from './Breadcrumb';
-import { type FolderNode, type TreeNode } from '../fileExplorer.schemas';
+import { type TreeNode } from '../fileExplorer.schemas';
 import { formatSize, getTotalSize, encodePath } from '../fileExplorer.utils';
 import { TreeNodeDetailRow } from './TreeNodeDetailRow';
 import { NODE_TYPE } from '../fileExplorer.const';
@@ -14,9 +14,16 @@ interface TreeNodeDetailProps {
 }
 
 export const TreeNodeDetail = ({ node, segments }: TreeNodeDetailProps) => {
-  const fullPath = segments.join('/');
+  const [childFilter, setChildFilter] = useState('');
 
   const totalSize = useMemo(() => getTotalSize(node), [node]);
+  const fullPath = segments.join('/');
+
+  const filteredChildren = useMemo(() => {
+    if (node.type !== NODE_TYPE.FOLDER) return [];
+    const q = childFilter.trim().toLowerCase();
+    return q ? node.children.filter((c) => c.name.toLowerCase().includes(q)) : node.children;
+  }, [node, childFilter]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 py-8">
@@ -47,36 +54,59 @@ export const TreeNodeDetail = ({ node, segments }: TreeNodeDetailProps) => {
       </div>
 
       {node.type === NODE_TYPE.FOLDER && node.children.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <h2 className="type-body-xs text-content-secondary font-semibold tracking-wide uppercase">
-            Children ({node.children.length})
-          </h2>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="type-body-xs text-content-secondary font-semibold tracking-wide whitespace-nowrap uppercase">
+              Children ({node.children.length})
+            </h2>
+            <div className="relative w-full">
+              <Search
+                size={12}
+                className="text-content-secondary absolute top-1/2 left-2.5 -translate-y-1/2"
+              />
+              <input
+                type="text"
+                value={childFilter}
+                onChange={(e) => setChildFilter(e.target.value)}
+                placeholder="Filter…"
+                className="border-border bg-surface-panel type-body-xs text-content-primary placeholder:text-content-secondary focus:ring-content-accent-muted/20 w-full rounded border py-1 pr-2 pl-7 focus:ring-2 focus:outline-none"
+              />
+            </div>
+          </div>
           <div className="border-border overflow-hidden rounded-md border">
-            {(node as FolderNode).children.map((child, index) => {
-              const childSegments = [...segments, child.name];
-              return (
-                <Link
-                  key={child.name}
-                  to={ROUTES.TREE_NODE(encodePath(childSegments))}
-                  className={[
-                    'hover:bg-surface-panel/60 flex items-center gap-3 px-4 py-2.5',
-                    index !== (node as FolderNode).children.length - 1 ? 'border-border border-b' : '',
-                  ].join(' ')}
-                >
-                  {child.type === NODE_TYPE.FILE ? (
-                    <File size={14} className="text-content-secondary shrink-0" />
-                  ) : (
-                    <Folder size={14} className="text-content-secondary shrink-0" />
-                  )}
-                  <span className="type-body-s text-content-primary min-w-0 flex-1 truncate">{child.name}</span>
-                  <span className="type-body-xs text-content-secondary shrink-0">
-                    {child.type === NODE_TYPE.FILE
-                      ? formatSize(child.size)
-                      : `${child.children.length} items`}
-                  </span>
-                </Link>
-              );
-            })}
+            {filteredChildren.length === 0 ? (
+              <p className="type-body-s text-content-secondary px-4 py-3">
+                No children match "{childFilter}".
+              </p>
+            ) : (
+              filteredChildren.map((child, index) => {
+                const childSegments = [...segments, child.name];
+                return (
+                  <Link
+                    key={child.name}
+                    to={ROUTES.TREE_NODE(encodePath(childSegments))}
+                    className={[
+                      'hover:bg-surface-panel/60 flex items-center gap-3 px-4 py-2.5',
+                      index !== filteredChildren.length - 1 ? 'border-border border-b' : '',
+                    ].join(' ')}
+                  >
+                    {child.type === NODE_TYPE.FILE ? (
+                      <File size={14} className="text-content-secondary shrink-0" />
+                    ) : (
+                      <Folder size={14} className="text-content-secondary shrink-0" />
+                    )}
+                    <span className="type-body-s text-content-primary min-w-0 flex-1 truncate">
+                      {child.name}
+                    </span>
+                    <span className="type-body-xs text-content-secondary shrink-0">
+                      {child.type === NODE_TYPE.FILE
+                        ? formatSize(child.size)
+                        : `${child.children.length} items`}
+                    </span>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
       )}

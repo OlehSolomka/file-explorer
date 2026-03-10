@@ -9,6 +9,7 @@ export const useTree = () => {
   const navigate = useNavigate();
 
   const raw = LocalstorageHelper.get<unknown>(LOCALSTORAGE_KEYS.TREE_DATA);
+  //in case someone corrupted the data in localstorage or it’s missing for some reason, we want to redirect them to the home page instead of showing a blank screen or crashing
   const result = TreeNodeSchema.safeParse(raw);
 
   useEffect(() => {
